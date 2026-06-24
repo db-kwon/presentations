@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partner FE Bot 제작기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1FBF6;
+    --paper-2:#E7F7EE;
+    --ink:#10362F;
+    --ink-soft:#3C5C53;
+    --mint:#13C295;
+    --mint-deep:#0A9E78;
+    --citrus:#FF8A3D;
+    --lemon:#FFCE2E;
+    --sky:#3FB9F0;
+    --cloud:#FFFFFF;
+    --mist:#D7EFE4;
+    --line:#CDE9DC;
+    --shadow:0 14px 40px -18px rgba(11,90,68,.45);
+    --shadow-sm:0 6px 18px -10px rgba(11,90,68,.4);
+    --kr:'Pretendard',system-ui,sans-serif;
+    --lat:'Space Grotesk',var(--kr);
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--kr);
+    color:var(--ink);
+    background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+
+  /* ambient freshness */
+  .ambient{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5}
+  .blob.a{width:46vw;height:46vw;top:-14vw;right:-10vw;background:radial-gradient(circle at 30% 30%,#9BF3D4,transparent 70%)}
+  .blob.b{width:38vw;height:38vw;bottom:-16vw;left:-12vw;background:radial-gradient(circle at 60% 40%,#FFE7A8,transparent 70%)}
+  .blob.c{width:24vw;height:24vw;top:40%;left:55%;background:radial-gradient(circle at 50% 50%,#BDEBFF,transparent 70%);opacity:.35}
+
+  /* progress + chrome */
+  .progress{position:fixed;top:0;left:0;height:4px;z-index:50;
+    background:linear-gradient(90deg,var(--mint),var(--lemon),var(--citrus));
+    width:0;transition:width .4s cubic-bezier(.2,.7,.2,1)}
+  .counter{position:fixed;top:18px;right:22px;z-index:50;
+    font-family:var(--lat);font-weight:700;font-size:13px;letter-spacing:.06em;
+    color:var(--mint-deep);background:rgba(255,255,255,.7);
+    border:1px solid var(--line);border-radius:999px;padding:6px 13px;backdrop-filter:blur(6px)}
+  .counter b{color:var(--ink)}
+
+  /* deck */
+  .deck{position:relative;z-index:1;height:100%}
+  .slide{position:absolute;inset:0;display:none;
+    padding:clamp(28px,5vw,80px);
+    align-items:center;justify-content:center}
+  .slide.active{display:flex}
+  .wrap{width:min(1000px,100%)}
+
+  @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .slide.active .anim{animation:rise .55s cubic-bezier(.2,.7,.2,1) both}
+  .slide.active .anim:nth-child(2){animation-delay:.06s}
+  .slide.active .anim:nth-child(3){animation-delay:.12s}
+  .slide.active .anim:nth-child(4){animation-delay:.18s}
+  .slide.active .anim:nth-child(5){animation-delay:.24s}
+
+  /* type system */
+  .eyebrow{font-family:var(--lat);font-weight:700;font-size:13px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--mint-deep);display:inline-flex;align-items:center;gap:10px;margin-bottom:20px}
+  .eyebrow .num{background:var(--ink);color:#EAFBF4;border-radius:7px;padding:3px 8px;font-size:12px}
+  .eyebrow.hermes{color:var(--citrus)}
+  .eyebrow.hermes .num{background:var(--citrus);color:#fff}
+
+  h1{font-size:clamp(34px,6vw,68px);font-weight:800;line-height:1.06;letter-spacing:-.02em}
+  h2{font-size:clamp(26px,3.8vw,44px);font-weight:800;line-height:1.12;letter-spacing:-.015em}
+  .lead{font-size:clamp(16px,1.9vw,21px);color:var(--ink-soft);line-height:1.6;margin-top:18px;max-width:62ch}
+  .mint{color:var(--mint-deep)}
+  .pop{color:var(--citrus)}
+  .hl{background:linear-gradient(transparent 62%,#FFE6A1 62%);padding:0 2px}
+
+  /* hero */
+  .hero h1 .b1{display:block}
+  .hero .sub{font-family:var(--lat);font-weight:500;font-size:clamp(15px,2vw,20px);
+    color:var(--ink-soft);margin-top:20px}
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:46px;align-items:center}
+  .meta{margin-top:34px;display:flex;gap:10px;flex-wrap:wrap}
+  .chip{font-family:var(--lat);font-weight:500;font-size:13px;color:var(--mint-deep);
+    background:var(--cloud);border:1px solid var(--line);border-radius:999px;padding:7px 14px;box-shadow:var(--shadow-sm)}
+
+  /* chat mock */
+  .mock{background:var(--cloud);border:1px solid var(--line);border-radius:20px;
+    box-shadow:var(--shadow);overflow:hidden}
+  .mock-bar{display:flex;align-items:center;gap:7px;padding:13px 16px;border-bottom:1px solid var(--mist);background:linear-gradient(180deg,#fff,#F4FCF8)}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .dot.r{background:#FF7A6E}.dot.y{background:var(--lemon)}.dot.g{background:var(--mint)}
+  .mock-bar span{margin-left:8px;font-family:var(--lat);font-size:12px;color:var(--ink-soft);font-weight:500}
+  .mock-body{padding:18px;display:flex;flex-direction:column;gap:12px}
+  .msg{max-width:88%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.5}
+  .msg.me{align-self:flex-end;background:var(--ink);color:#Eafff7;border-bottom-right-radius:5px}
+  .msg.bot{align-self:flex-start;background:var(--paper-2);border:1px solid var(--mist);border-bottom-left-radius:5px}
+  .msg.bot b{color:var(--mint-deep)}
+  .path{font-family:var(--mono);font-size:12px;background:#0E2A24;color:#8DF0CC;
+    padding:2px 7px;border-radius:6px;display:inline-block;margin-top:6px;word-break:break-all}
+
+  /* cards */
+  .cards{display:grid;gap:18px;margin-top:34px}
+  .c3{grid-template-columns:repeat(3,1fr)}
+  .c2{grid-template-columns:repeat(2,1fr)}
+  .card{background:var(--cloud);border:1px solid var(--line);border-radius:16px;
+    padding:22px 22px 24px;box-shadow:var(--shadow-sm);border-top:4px solid var(--mint)}
+  .card.alt{border-top-color:var(--citrus)}
+  .card.alt2{border-top-color:var(--sky)}
+  .card .ic{font-size:24px;line-height:1}
+  .card h3{font-size:17px;font-weight:700;margin:13px 0 7px}
+  .card p{font-size:14.5px;color:var(--ink-soft);line-height:1.55}
+  .card .tag{font-family:var(--lat);font-size:11px;font-weight:700;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--mint-deep)}
+  .card.alt .tag{color:var(--citrus)}
+
+  /* pipeline */
+  .pipe{display:flex;align-items:stretch;gap:14px;margin-top:38px;flex-wrap:wrap}
+  .node{flex:1;min-width:150px;background:var(--cloud);border:1px solid var(--line);
+    border-radius:14px;padding:18px;box-shadow:var(--shadow-sm);position:relative}
+  .node .k{font-family:var(--lat);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .node .v{font-size:16px;font-weight:700;margin-top:6px}
+  .node small{display:block;color:var(--ink-soft);font-size:12.5px;margin-top:4px}
+  .node.star{border:2px solid var(--mint);box-shadow:0 16px 36px -16px rgba(19,194,149,.6)}
+  .node.star .k{color:var(--mint-deep)}
+  .arrow{align-self:center;color:var(--mint);font-size:22px;font-weight:700}
+
+  /* layered (architecture) */
+  .layers{display:flex;flex-direction:column;gap:14px;margin-top:30px}
+  .layer{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;
+    background:var(--cloud);border:1px solid var(--line);border-radius:16px;padding:18px 22px;box-shadow:var(--shadow-sm)}
+  .layer .lv{font-family:var(--lat);font-weight:700;font-size:13px;color:#fff;
+    background:var(--mint);border-radius:10px;padding:10px 12px;text-align:center;min-width:84px}
+  .layer:nth-child(2) .lv{background:var(--citrus)}
+  .layer:nth-child(3) .lv{background:var(--sky)}
+  .layer h3{font-size:17px;font-weight:700}
+  .layer p{font-size:14px;color:var(--ink-soft);line-height:1.5;margin-top:4px}
+  .layer .me{color:var(--mint-deep);font-weight:600}
+
+  /* timeline */
+  .tl{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+  .step{background:var(--cloud);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow-sm);position:relative}
+  .step .n{font-family:var(--lat);font-weight:700;font-size:13px;color:#fff;background:var(--ink);
+    width:30px;height:30px;display:grid;place-items:center;border-radius:9px}
+  .step h3{font-size:17px;font-weight:700;margin:12px 0 8px}
+  .step .now{font-family:var(--lat);font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--citrus);
+    border:1px solid var(--citrus);border-radius:6px;padding:2px 6px;margin-left:8px}
+  .step ul{list-style:none;font-size:13.5px;color:var(--ink-soft);line-height:1.55}
+  .step li{padding-left:16px;position:relative;margin-top:5px}
+  .step li::before{content:'›';position:absolute;left:0;color:var(--mint);font-weight:700}
+  .step .warn{color:var(--citrus)}
+
+  /* bullets */
+  .blist{list-style:none;margin-top:26px;display:grid;gap:13px}
+  .blist li{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;
+    background:var(--cloud);border:1px solid var(--line);border-radius:13px;padding:15px 18px;box-shadow:var(--shadow-sm)}
+  .blist .ic{font-size:20px;line-height:1.4}
+  .blist b{font-weight:700}
+  .blist span{font-size:14.5px;color:var(--ink-soft);line-height:1.55}
+  .blist strong{color:var(--mint-deep)}
+
+  /* split */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:30px}
+  .panel{background:var(--cloud);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow-sm)}
+  .panel.warm{border-top:4px solid var(--citrus)}
+  .panel.cool{border-top:4px solid var(--mint)}
+  .panel h3{font-size:16px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .panel ul{list-style:none;display:grid;gap:9px}
+  .panel li{font-size:14px;color:var(--ink-soft);line-height:1.5;padding-left:18px;position:relative}
+  .panel li::before{content:'•';position:absolute;left:2px;color:var(--mint);font-weight:700}
+  .panel.warm li::before{color:var(--citrus)}
+
+  /* table */
+  .tbl{margin-top:26px;background:var(--cloud);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm)}
+  .tbl table{width:100%;border-collapse:collapse;font-size:14px}
+  .tbl th{background:var(--paper-2);text-align:left;font-weight:700;font-size:12.5px;
+    letter-spacing:.02em;color:var(--ink);padding:13px 18px;border-bottom:1px solid var(--line)}
+  .tbl td{padding:13px 18px;border-bottom:1px solid var(--mist);color:var(--ink-soft);line-height:1.45;vertical-align:top}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl td:first-child{color:var(--ink);font-weight:600}
+  .mono{font-family:var(--mono);font-size:12.5px;background:#0E2A24;color:#8DF0CC;padding:1px 6px;border-radius:5px}
+
+  /* answer format */
+  .fmt{background:#0E2A24;border-radius:18px;padding:24px;box-shadow:var(--shadow);font-family:var(--mono);
+    font-size:13.5px;color:#CFF6E6;line-height:1.7;margin-top:8px}
+  .fmt .h{color:var(--lemon)}
+  .fmt .p{color:#8DF0CC}
+  .fmt .c{color:#6FB4C9}
+
+  /* big statement */
+  .statement{font-size:clamp(26px,4.3vw,52px);font-weight:800;line-height:1.18;letter-spacing:-.015em}
+  .badges{display:flex;gap:14px;margin-top:38px;flex-wrap:wrap}
+  .badge{background:var(--cloud);border:1px solid var(--line);border-radius:14px;padding:16px 20px;
+    box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:12px;font-weight:600;font-size:15px}
+  .badge .ic{font-size:22px}
+  .badge:nth-child(1){border-bottom:3px solid var(--mint)}
+  .badge:nth-child(2){border-bottom:3px solid var(--citrus)}
+  .badge:nth-child(3){border-bottom:3px solid var(--sky)}
+
+  /* closing */
+  .close{text-align:center}
+  .close .cta{margin-top:36px;display:inline-flex;align-items:center;gap:10px;
+    background:var(--mint);color:#fff;font-weight:700;font-size:16px;padding:15px 26px;border-radius:999px;box-shadow:0 14px 30px -12px rgba(19,194,149,.7)}
+
+  /* nav */
+  .nav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:50;
+    display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.78);
+    border:1px solid var(--line);border-radius:999px;padding:7px 9px;backdrop-filter:blur(8px);box-shadow:var(--shadow-sm)}
+  .nav button{border:none;background:var(--paper-2);color:var(--ink);width:38px;height:38px;border-radius:50%;
+    font-size:17px;cursor:pointer;display:grid;place-items:center;transition:.18s}
+  .nav button:hover{background:var(--mint);color:#fff;transform:translateY(-1px)}
+  .nav button:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+  .dots{display:flex;gap:6px;padding:0 6px}
+  .dots i{width:8px;height:8px;border-radius:50%;background:var(--mist);cursor:pointer;transition:.2s}
+  .dots i.on{background:var(--mint);transform:scale(1.35)}
+  .hint{position:fixed;bottom:24px;right:22px;z-index:50;font-family:var(--lat);font-size:11px;
+    color:var(--ink-soft);background:rgba(255,255,255,.7);border:1px solid var(--line);
+    border-radius:8px;padding:6px 10px;letter-spacing:.03em}
+  .hint kbd{font-family:var(--mono);background:#fff;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:10px}
+
+  /* presenter notes */
+  .note{display:none;margin-top:26px;border-left:4px solid var(--lemon);background:#FFFBEE;
+    border-radius:0 12px 12px 0;padding:14px 18px;font-size:14px;color:#6b5a1f;line-height:1.6}
+  .note::before{content:'🎙 발표 노트';display:block;font-family:var(--lat);font-weight:700;font-size:11px;
+    letter-spacing:.08em;color:#B8860B;margin-bottom:6px}
+  body.notes .note{display:block;animation:rise .4s ease both}
+
+  @media (max-width:820px){
+    .hero-grid,.split{grid-template-columns:1fr;gap:24px}
+    .cards.c3,.cards.c2,.tl{grid-template-columns:1fr}
+    .layer{grid-template-columns:1fr;gap:10px}
+    .pipe{flex-direction:column}.arrow{transform:rotate(90deg)}
+    .counter{top:auto;bottom:74px;right:14px}.hint{display:none}
+    .slide{padding:64px 20px 92px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="ambient"><div class="blob a"></div><div class="blob b"></div><div class="blob c"></div></div>
+<div class="progress" id="progress"></div>
+<div class="counter"><b id="cur">1</b> / <span id="total">15</span></div>
+
+<div class="deck" id="deck">
+
+  <!-- 1 -->
+  <section class="slide active">
+    <div class="wrap hero">
+      <div class="hero-grid">
+        <div>
+          <span class="eyebrow anim"><span class="num">DEV TALK</span> 15 MIN · 개발팀 전체</span>
+          <h1 class="anim"><span class="b1">Partner</span><span class="b1">FE Bot <span class="mint">제작기</span></span></h1>
+          <p class="sub anim">코드를 직접 읽어서 답하는, 우리 팀 전용 동료</p>
+          <div class="meta anim">
+            <span class="chip">📂 모노레포 탐색</span>
+            <span class="chip">🤖 Hermes Agent</span>
+            <span class="chip">💬 Slack DM</span>
+          </div>
+        </div>
+        <div class="mock anim">
+          <div class="mock-bar"><i class="dot r"></i><i class="dot y"></i><i class="dot g"></i><span>Partner FE Bot</span></div>
+          <div class="mock-body">
+            <div class="msg me">병원관리자에서 로그인 플로우 어떻게 돼?</div>
+            <div class="msg bot"><b>## 답변</b><br>진입 시 토큰을 확인하고, 없으면 로그인 페이지로 보냅니다…
+            <span class="path">apps/babitalk_client_front/…/login/index.tsx:42</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="note">안녕하세요. 오늘은 파트너 FE 모노레포에 붙여본 'Partner FE Bot' 이야기를 가져왔습니다. 단순히 봇을 만들었다가 아니라, 어떤 문제를 풀려고 했고 Hermes라는 도구를 왜·어떻게 도입했는지에 초점을 맞춰 공유하겠습니다.</div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow anim"><span class="num">01</span> 왜 만들었나</span>
+      <h2 class="anim">“이 로직 <span class="pop">어디 있더라?</span>”</h2>
+      <p class="lead anim">모노레포라 파일을 한참 뒤지고, 같은 질문에 매번 코드를 찾아 설명해야 했습니다. 이 <span class="hl">탐색 + 설명 비용</span>을 봇으로 줄일 수 없을까에서 출발했어요.</p>
+      <div class="cards c3 anim">
+        <div class="card"><div class="ic">🔁</div><div class="tag">내 작업</div><h3>코드 탐색 비용</h3><p>모노레포라 로직 하나 찾으려고 여러 파일을 열어봐야 함</p></div>
+        <div class="card alt"><div class="ic">💬</div><div class="tag">협업</div><h3>반복 질문</h3><p>기획·BE의 “이 버튼 누르면 프론트에서 어떻게 처리돼요?”</p></div>
+        <div class="card alt2"><div class="ic">🧑‍💻</div><div class="tag">온보딩</div><h3>레거시 허들</h3><p>코드에 답은 있지만 처음 보는 사람에겐 그 자체가 벽</p></div>
+      </div>
+      <div class="note">출발점은 일상적 불편함이었어요. 모노레포라 '이 로직 어디 있지?' 하고 한참 뒤지고, 기획·백엔드의 반복 질문에 매번 코드를 찾아 설명하고, 신규 입사자 온보딩 때도 똑같았습니다. 이 탐색·설명 비용을 코드를 실제로 읽어 답하는 봇으로 줄이자는 게 시작이었습니다.</div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow anim"><span class="num">02</span> 한 줄 요약</span>
+      <p class="statement anim">Slack DM으로 질문하면,<br><span class="mint">실제 소스를 읽고</span> 답하는 봇</p>
+      <div class="badges anim">
+        <div class="badge"><span class="ic">📂</span>벡터DB 없이 파일 직접 탐색</div>
+        <div class="badge"><span class="ic">🆕</span>항상 최신 코드 기준</div>
+        <div class="badge"><span class="ic">🔒</span>읽기 전용 · 수정 불가</div>
+      </div>
+      <div class="note">한 줄로, 슬랙에서 DM 보내면 모노레포 코드를 직접 읽고 답하는 봇입니다. 미리 임베딩한 벡터DB가 아니라 질문이 올 때마다 실제 파일을 읽어서 항상 최신 기준으로 답하고, 코드는 읽기 전용으로만 접근합니다.</div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow anim"><span class="num">03</span> 전체 그림</span>
+      <h2 class="anim">단순한 파이프라인, 뼈대는 <span class="mint">Hermes</span></h2>
+      <div class="pipe anim">
+        <div class="node"><div class="k">Input</div><div class="v">Slack DM</div><small>사용자 질문</small></div>
+        <div class="arrow">→</div>
+        <div class="node star"><div class="k">Agent ★</div><div class="v">Hermes Agent</div><small>전체를 묶는 뼈대</small></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="k">Model</div><div class="v">AI API</div><small>현재 OpenAI Codex</small></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="k">Source</div><div class="v">모노레포</div><small>find · grep · read</small></div>
+      </div>
+      <p class="lead anim">메시지 수신·모델 연결·코드 읽기 도구까지를 인프라를 직접 짜지 않고 <strong class="mint">Hermes Agent 하나로</strong> 묶었습니다.</p>
+      <div class="note">구조는 단순합니다. 슬랙 DM이 들어오면 Hermes가 받고, 뒤에 붙은 모델 API를 호출하고, 그 모델이 find·grep·read_file로 실제 소스를 읽어 답을 만듭니다. 핵심은 이 전체를 제가 인프라를 직접 짜지 않고 Hermes 하나로 묶었다는 점이에요. 그래서 이제 Hermes를 깊게 보겠습니다.</div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow hermes anim"><span class="num">HERMES</span> 심화 ① — 정체</span>
+      <h2 class="anim">Hermes Agent란?</h2>
+      <p class="lead anim">NousResearch의 <strong class="mint">오픈소스 AI 에이전트 프레임워크</strong>(MIT). 모델이 아니라, 모델을 ‘일하는 에이전트’로 만들어주는 몸통. 캐치프레이즈는 <em>“The agent that grows with you.”</em></p>
+      <div class="cards c3 anim">
+        <div class="card"><div class="ic">🔌</div><div class="tag">why 1</div><h3>메시징 15종+ 내장</h3><p>Slack·Telegram·Discord·Email… 채널 붙이는 코드가 필요 없음</p></div>
+        <div class="card alt"><div class="ic">🛠</div><div class="tag">why 2</div><h3>도구 + MCP</h3><p>파일 읽기·터미널 실행이 기본 + MCP 지원 → 우리 목표에 즉시 부합</p></div>
+        <div class="card alt2"><div class="ic">🧠</div><div class="tag">why 3</div><h3>스스로 학습</h3><p>맥락을 정리해 skill을 자동 생성·진화시킴</p></div>
+      </div>
+      <div class="note">Hermes는 오픈소스 LLM Hermes 시리즈를 만든 NousResearch의 에이전트 프레임워크입니다. 제가 고른 이유 셋: 메시징 연동 15종+ 기본 내장, 파일·터미널 도구 + MCP 기본 제공, 그리고 질문마다 맥락을 정리해 스스로 skill을 만들어 진화한다는 점. 이 세 번째가 결정적 차별점이라 뒤에서 따로 봅니다.</div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow hermes anim"><span class="num">HERMES</span> 심화 ② — 구조</span>
+      <h2 class="anim">3계층 아키텍처</h2>
+      <div class="layers anim">
+        <div class="layer"><div class="lv">Layer 1<br>Gateway</div><div><h3>메시징 어댑터</h3><p>슬랙·텔레그램 등 들어온 메시지를 공통 포맷으로 정규화 · 세션/인증/cron 처리 → <span class="me">슬랙 연동이 설정 몇 줄로 끝</span></p></div></div>
+        <div class="layer"><div class="lv">Layer 2<br>AIAgent</div><div><h3>오케스트레이션 엔진</h3><p>모델(provider) 선택 · 시스템 프롬프트 조립(SOUL/메모리/skill) · 도구 실행 · 재시도 · 컨텍스트 압축</p></div></div>
+        <div class="layer"><div class="lv">Layer 3<br>Backend</div><div><h3>실제 실행 위치</h3><p>Local / Docker / SSH / Daytona / Modal… → <span class="me">우리는 Docker로 격리</span></p></div></div>
+      </div>
+      <div class="note">Hermes는 3계층입니다. Gateway는 메시징 담당이라 슬랙 연동이 설정 몇 줄로 끝나고, AIAgent는 두뇌라기보다 오케스트레이터로 모델 선택·프롬프트 조립·도구 실행·압축을 맡습니다. Execution Backend는 코드를 실제로 어디서 돌릴지인데 우리는 보안 때문에 Docker를 골랐어요. 셋이 분리돼 있어 두뇌는 두고 실행 환경만 안전하게 바꿀 수 있습니다.</div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow hermes anim"><span class="num">HERMES</span> 심화 ③ — 학습</span>
+      <h2 class="anim">쓸수록 똑똑해진다 <span class="pop">: 상태를 잃지 않음</span></h2>
+      <div class="cards c3 anim">
+        <div class="card"><div class="ic">📘</div><div class="tag">절차적 기억</div><h3>Skill</h3><p>복잡한 작업을 끝내면 절차·함정·검증을 마크다운으로 자동 생성 → 다음엔 처음부터 추론 안 함<br><span class="path">~/.hermes/skills/</span></p></div>
+        <div class="card alt"><div class="ic">🗒</div><div class="tag">사실/성향</div><h3>MEMORY·USER.md</h3><p>알게 된 사실·사용자 성향을 사람이 읽는 마크다운으로 누적</p></div>
+        <div class="card alt2"><div class="ic">🎭</div><div class="tag">규칙</div><h3>SOUL.md</h3><p>봇 페르소나·규칙을 코드 아닌 <strong>자연어</strong>로 정의 → 비개발자도 수정 가능</p></div>
+      </div>
+      <p class="lead anim">모델을 재학습하는 게 아니라 <strong class="mint">컨텍스트에 노하우를 끼워 넣는</strong> 방식 → 추가 비용 없이 반복이 빨라지고 정확해짐.</p>
+      <div class="note">가장 Hermes다운 부분입니다. 보통 에이전트는 대화가 끝나면 다 잊는데, Hermes는 세 층으로 기억해요. skill은 복잡한 작업의 노하우를 마크다운으로 정리해 ~/.hermes/skills/ 에 쌓아두고 다음에 불러씁니다. MEMORY·USER.md에 사실과 성향이 누적되고, SOUL.md엔 규칙을 자연어로 적어요. '기획·BE도 이해하게 설명하라' 같은 규칙이 전부 여기 들어갑니다. 모델 재학습이 아니라 컨텍스트에 노하우를 끼워 넣는 방식이라 추가 비용 없이 좋아집니다.</div>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow hermes anim"><span class="num">HERMES</span> 심화 ④ — 모델</span>
+      <h2 class="anim">모델 변천사 <span class="mint">: provider 한 줄 교체</span></h2>
+      <div class="tl anim">
+        <div class="step"><div class="n">1</div><h3>Claude</h3><ul><li>코드 이해·설명 품질 우수 → 첫 선택</li><li class="warn">⚠ 모노레포 토큰 폭증 → rate limit + 비용</li></ul></div>
+        <div class="step"><div class="n">2</div><h3>Codex<span class="now">NOW</span></h3><ul><li>설정 한 줄로 provider 교체</li><li>코드 변경 0으로 전환 완료</li></ul></div>
+        <div class="step"><div class="n">3</div><h3>Gemini</h3><ul><li>큰 context + Workspace 비용 이점</li><li>모노레포 적합성 테스트 예정</li></ul></div>
+      </div>
+      <p class="lead anim">‘일단 붙여보고 아니면 갈아탄다’를 부담 없이 — <strong class="mint">provider-agnostic = 실험 비용 거의 0</strong>.</p>
+      <div class="note">모델을 두 번 갈아탔습니다. 처음 Claude는 품질이 좋았지만 모노레포 특성상 토큰이 빠르게 쌓여 rate limit과 비용이 부담이었어요. 지금은 Codex인데, Hermes가 provider를 설정 한 줄로 바꾸는 구조라 코드 한 줄 안 고치고 전환했습니다. 다음엔 Gemini도 비교할 거고요. 이렇게 부담 없이 실험할 수 있는 게 provider-agnostic의 진짜 가치였습니다.</div>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow hermes anim"><span class="num">HERMES</span> 심화 ⑤ — 보안</span>
+      <h2 class="anim">안전하게 코드에 붙이기</h2>
+      <ul class="blist anim">
+        <li><span class="ic">🐳</span><span><b>Docker 컨테이너 실행</b> — 맥북에서 컨테이너로 구동해 호스트와 분리</span></li>
+        <li><span class="ic">📁</span><span><b>모노레포 읽기 전용 마운트</b>(<span class="mono">:ro</span>) — <strong>코드 수정이 구조적으로 불가능</strong></span></li>
+        <li><span class="ic">🧱</span><span><b>Hermes 기본 안전장치</b> — 위험 명령 승인(command approval) · 권한 드롭 · LLM에 비밀키 노출 차단(credential stripping) · 세션 격리</span></li>
+      </ul>
+      <p class="lead anim">‘편리한 장난감’과 ‘실제 시스템에 붙일 수 있는 에이전트’의 차이는 <strong class="mint">이 격리</strong>에서 갈립니다.</p>
+      <div class="note">코드를 읽는 에이전트는 편리한 만큼 위험할 수 있어 경계를 분명히 했어요. 맥북에서 Docker로 돌리고, 모노레포를 읽기 전용으로 마운트해서 봇이 코드를 고치는 건 구조적으로 불가능합니다. Hermes 자체도 위험 명령 승인, 권한 드롭, 비밀키 차단, 세션 격리가 기본이라 사내 코드에 붙일 때 신뢰 기준선이 됩니다.</div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow hermes anim"><span class="num">HERMES</span> 심화 ⑥ — 도입</span>
+      <h2 class="anim">어디에 맞고, 어떻게 시작하나</h2>
+      <div class="split anim">
+        <div class="panel cool"><h3>🎯 언제 맞나</h3><ul>
+          <li>정책·승인 절차가 필요하거나 목표가 명확한 반복 업무</li>
+          <li>‘이 사람은 주로 이런 일을 한다’를 학습·진화 → 사무·운영 자동화에 특히 적합</li>
+          <li>특정 도메인 질문에 일관된 형식으로 답하기 (= 우리 봇)</li>
+        </ul></div>
+        <div class="panel warm"><h3>⚡ 도입 난이도</h3><ul>
+          <li>한 줄 설치 스크립트 → 약 15분이면 첫 대화</li>
+          <li><span class="mono">hermes gateway setup</span> 으로 슬랙 연동</li>
+          <li><span class="mono">terminal.backend=docker</span> 한 줄로 격리</li>
+          <li>GUI 대시보드 제공 · 최소 요건 context 64k↑ (Claude·GPT·Gemini 충족)</li>
+        </ul></div>
+      </div>
+      <p class="lead anim">인프라를 새로 짜는 게 아니라 <strong class="mint">설정으로 조립하는 도입</strong> → 팀 내 다른 반복 업무로 확장 가능.</p>
+      <div class="note">그래서 '우리가 또 어디에 쓸까'를 정리했어요. Hermes는 정책·승인이 있거나 목표가 분명한 반복 업무, 학습·진화가 중요한 사무·운영 자동화에 잘 맞습니다. 도입 난이도도 낮아요. 한 줄 설치로 15분이면 첫 대화, 슬랙 연동·Docker 격리는 각각 한 줄, GUI도 있고 모델은 64k 이상이면 됩니다. 인프라가 아니라 설정으로 조립하는 도입이라 확장도 쉽습니다.</div>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow anim"><span class="num">04</span> 삽질 모음</span>
+      <h2 class="anim">제가 밟은 지뢰들 😅</h2>
+      <div class="tbl anim">
+        <table>
+          <tr><th>증상</th><th>원인</th><th>해결</th></tr>
+          <tr><td>세션 DB 손상 반복</td><td>비정상 종료 시 SQLite 깨짐</td><td><span class="mono">SIGINT</span> graceful shutdown + 세션 디렉토리 바인드 마운트</td></tr>
+          <tr><td>컨테이너 내 명령 불인식</td><td><span class="mono">gateway start</span> 미지원</td><td><span class="mono">hermes gateway run</span> 으로 변경</td></tr>
+          <tr><td>DM이 아예 안 옴</td><td>Slack 앱 Messages Tab 비활성</td><td>Messages Tab 활성화 (가장 자주 놓치는 설정)</td></tr>
+          <tr><td>느려지고 루프에 빠짐</td><td>context 압축이 너무 잦음</td><td><span class="mono">max_turns=20</span> · <span class="mono">timeout=120s</span> · 압축 threshold 조정</td></tr>
+        </table>
+      </div>
+      <div class="note">순탄하진 않았어요. 가장 골치는 비정상 종료 때마다 세션 DB가 깨지는 거였는데 SIGINT graceful shutdown과 바인드 마운트로 잡았습니다. 컨테이너에선 gateway run으로 바꿔야 했고, DM이 안 와서 한참 헤맸는데 Messages Tab을 켜는 거였어요. 압축이 잦아 느려지던 건 max_turns·timeout·threshold를 손봐 안정화했습니다.</div>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow anim"><span class="num">05</span> 어떻게 쓰나</span>
+      <h2 class="anim">Slack에서 <span class="mint">DM</span> 한 통</h2>
+      <p class="lead anim">질문할 때 <span class="hl">어떤 앱인지 지정</span>하면 탐색 범위가 좁아져 더 빠릅니다.</p>
+      <div class="tbl anim">
+        <table>
+          <tr><th>이렇게 부르면</th><th>여기를 탐색</th></tr>
+          <tr><td>병원관리자 · 병관 · client · 병원</td><td><span class="mono">apps/babitalk_client_front/**</span></td></tr>
+          <tr><td>운영관리자 · 운관 · admin · 어드민</td><td><span class="mono">apps/babitalk_admin_front/**</span></td></tr>
+        </table>
+      </div>
+      <div class="cards c2 anim" style="margin-top:20px">
+        <div class="card"><p>💬 “<b>병원관리자</b>에서 로그인 플로우 어떻게 돼?”</p></div>
+        <div class="card alt"><p>💬 “<b>운영관리자</b> 토스트 어디서 관리해?”</p></div>
+      </div>
+      <div class="note">쓰는 법은 간단해요. 'Partner FE Bot'한테 DM만 보내면 됩니다. 팁은 어떤 앱인지 지정하면 범위가 좁아져 빨라진다는 것. '병원관리자'는 client front, '운영관리자'는 admin front를 봅니다.</div>
+    </div>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow anim"><span class="num">06</span> 답변 형식</span>
+      <h2 class="anim">신뢰할 수 있는 출력</h2>
+      <div class="split anim" style="grid-template-columns:1fr 1fr;align-items:start">
+        <div class="fmt">
+<span class="h">## 답변</span><br>흐름 중심의 자연어 설명<br><br>
+<span class="h">## 근거</span><br>- <span class="p">apps/…/login/index.tsx:42</span> <span class="c">— 설명</span><br><br>
+<span class="h">## 주의 / 사이드이펙트</span><br><span class="c">- 관련 영향 범위 · 주의사항</span>
+        </div>
+        <div>
+          <ul class="panel" style="border:none;box-shadow:none;background:transparent;padding:0;display:grid;gap:13px">
+            <li style="list-style:none;padding-left:0">📍 <b>파일 경로 + 라인 번호</b>로 바로 확인 가능</li>
+            <li style="list-style:none;padding-left:0">🗣 FE 용어는 기획·BE도 이해하게 풀어서</li>
+            <li style="list-style:none;padding-left:0">🚧 프론트 밖 로직은 “백엔드에 있을 것 같다”로 경계 구분</li>
+            <li style="list-style:none;padding-left:0">⚙️ 이 규칙은 전부 <span class="mono">SOUL.md</span> 에 정의</li>
+          </ul>
+        </div>
+      </div>
+      <div class="note">봇은 항상 답변·근거·주의 세 단락으로 답합니다. 근거에 경로와 라인 번호가 찍혀 바로 코드로 갈 수 있고, FE 용어는 풀어 쓰고, 프론트가 처리 안 하는 로직은 백엔드라고 명시해 경계를 그어요. 이 규칙들이 전부 아까 본 SOUL.md에 적혀 있습니다.</div>
+    </div>
+  </section>
+
+  <!-- 14 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow anim"><span class="num">07</span> 한계와 로드맵</span>
+      <h2 class="anim">솔직한 현재, 그리고 다음</h2>
+      <div class="split anim">
+        <div class="panel warm"><h3>🚧 지금의 한계</h3><ul>
+          <li>맥북이 꺼지면 봇도 꺼짐 → 상시 운영하려면 서버 이전(EC2 등)</li>
+          <li>파일 직접 읽기라 규모에 따라 느릴 수 있음</li>
+          <li>틀릴 수 있음 → 보조 참고용, 중요한 건 직접 확인</li>
+        </ul></div>
+        <div class="panel cool"><h3>🛠 앞으로</h3><ul>
+          <li>서버 이전으로 안정적 상시 운영</li>
+          <li>Gemini API 테스트로 비용·성능 최적화</li>
+          <li>피드백 반영해 SOUL.md 지속 개선</li>
+        </ul></div>
+      </div>
+      <div class="note">솔직히 아직 완벽하진 않습니다. 지금은 제 맥북에서 돌려서 꺼지면 봇도 꺼지고, 파일 직접 읽기라 느릴 수 있고, 틀릴 수 있으니 보조 참고용으로 써주세요. 앞으로 서버 이전, Gemini 최적화, 피드백 반영을 계획하고 있습니다.</div>
+    </div>
+  </section>
+
+  <!-- 15 -->
+  <section class="slide">
+    <div class="wrap close">
+      <span class="eyebrow anim" style="justify-content:center"><span class="num">FIN</span> 마무리</span>
+      <h1 class="anim" style="font-size:clamp(30px,5vw,58px)">작게 시작해서<br><span class="mint">빠르게 검증</span>한 사례</h1>
+      <p class="lead anim" style="margin-left:auto;margin-right:auto;text-align:center">반복되던 탐색·설명 비용을 봇으로 흡수 · Hermes로 인프라 없이 <strong class="mint">설정 조립</strong> · 모델은 <strong class="pop">갈아끼우며 실험</strong>. 같은 패턴을 팀 내 다른 반복 업무로도 확장할 수 있습니다.</p>
+      <div class="anim"><span class="cta">많이 써보고 피드백 주세요 🙂</span></div>
+      <div class="note">마무리합니다. 거창한 플랫폼이 아니라 작게 시작해 빠르게 검증한 사례에 가깝습니다. 탐색·설명 비용을 봇으로 흡수했고, Hermes 덕에 인프라 없이 설정으로 조립하며 모델을 자유롭게 실험했어요. 같은 패턴을 다른 반복 업무에도 적용할 수 있습니다. 많이 써보시고 피드백 주세요. 도입 관심 있으면 따로 같이 봐요. 감사합니다!</div>
+    </div>
+  </section>
+
+</div>
+
+<nav class="nav" aria-label="슬라이드 이동">
+  <button id="prev" aria-label="이전">‹</button>
+  <div class="dots" id="dots"></div>
+  <button id="next" aria-label="다음">›</button>
+</nav>
+<div class="hint"><kbd>←</kbd> <kbd>→</kbd> 이동 · <kbd>N</kbd> 발표노트</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const dotsWrap=document.getElementById('dots');
+  const progress=document.getElementById('progress');
+  const curEl=document.getElementById('cur');
+  document.getElementById('total').textContent=slides.length;
+  let i=0;
+
+  slides.forEach((_,n)=>{
+    const d=document.createElement('i');
+    d.addEventListener('click',()=>go(n));
+    dotsWrap.appendChild(d);
+  });
+  const dots=[...dotsWrap.children];
+
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    dots.forEach((d,k)=>d.classList.toggle('on',k===i));
+    progress.style.width=((i+1)/slides.length*100)+'%';
+    curEl.textContent=i+1;
+  }
+  function next(){go(i+1)}
+  function prev(){go(i-1)}
+
+  document.getElementById('next').addEventListener('click',next);
+  document.getElementById('prev').addEventListener('click',prev);
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='Home'){go(0)}
+    else if(e.key==='End'){go(slides.length-1)}
+    else if(e.key.toLowerCase()==='n'){document.body.classList.toggle('notes')}
+  });
+
+  // swipe
+  let x0=null;
+  addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+  addEventListener('touchend',e=>{
+    if(x0===null)return;
+    const dx=e.changedTouches[0].clientX-x0;
+    if(Math.abs(dx)>50){dx<0?next():prev()}
+    x0=null;
+  },{passive:true});
+
+  go(0);
+</script>
+</body>
+</html>
