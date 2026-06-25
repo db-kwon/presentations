@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Partner FE Bot 제작기</title>
+<title>비공개 코드, 공공재가 된 로직 — Partner FE Bot</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
@@ -234,7 +234,32 @@
     letter-spacing:.08em;color:#B8860B;margin-bottom:6px}
   body.notes .note{display:block;animation:rise .4s ease both}
 
+  /* weekly report (slack card) */
+  .report{background:#1F2024;border:1px solid #36383F;border-radius:18px;
+    box-shadow:var(--shadow);overflow:hidden;color:#E9EAEC}
+  .report-h{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid #36383F;
+    font-weight:800;font-size:15.5px}
+  .report-h .em{font-size:18px}
+  .report-h small{font-family:var(--mono);font-weight:400;color:#A7A9B0;font-size:12px}
+  .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px 22px;padding:18px 20px}
+  .metric .ml{font-size:12.5px;color:#A7A9B0;font-weight:600;margin-bottom:6px}
+  .metric .mv{font-family:var(--mono);font-size:13.5px;color:#FFAE57;background:#2A2C31;
+    border:1px solid #3C3F47;border-radius:7px;padding:5px 10px;display:inline-flex;align-items:center;gap:8px}
+  .metric .mv .pct{color:#FF8A3D}
+  .led{width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FF8276,#D62B1F);
+    box-shadow:0 0 9px rgba(255,80,64,.7);display:inline-block;flex:none}
+  .report-days{padding:4px 20px 18px}
+  .report-days .lbl{font-size:12.5px;color:#A7A9B0;font-weight:600;margin-bottom:10px}
+  .dayrow{display:flex;align-items:center;gap:11px;margin-top:8px;font-size:13px;color:#CFD0D5}
+  .dayrow .dt{font-family:var(--mono);font-size:11.5px;color:#FF8A3D;flex:none}
+  .bar{display:flex;gap:3px}
+  .bar i{width:12px;height:12px;border-radius:3px;background:#3C3F47}
+  .bar i.on{background:#E9EAEC}
+  .report-f{border-top:1px solid #36383F;padding:12px 20px;font-size:11.5px;color:#8A8C93;
+    display:flex;align-items:center;gap:8px;font-family:var(--lat)}
+
   @media (max-width:820px){
+    .report-grid{grid-template-columns:1fr 1fr}
     .hero-grid,.split{grid-template-columns:1fr;gap:24px}
     .cards.c3,.cards.c2,.tl{grid-template-columns:1fr}
     .layer{grid-template-columns:1fr;gap:10px}
@@ -260,12 +285,12 @@
       <div class="hero-grid">
         <div>
           <span class="eyebrow anim"><span class="num">DEV TALK</span> 15 MIN · 개발팀 전체</span>
-          <h1 class="anim"><span class="b1">Partner</span><span class="b1">FE Bot <span class="mint">제작기</span></span></h1>
-          <p class="sub anim">코드를 직접 읽어서 답하는, 우리 팀 전용 동료</p>
+          <h1 class="anim"><span class="b1">비공개 코드,</span><span class="b1">공공재가 된 <span class="mint">로직</span></span></h1>
+          <p class="sub anim">Partner FE Bot — 사내 코드는 지키고, 그 안의 로직은 팀 전체에 개방하다</p>
           <div class="meta anim">
-            <span class="chip">📂 모노레포 탐색</span>
+            <span class="chip">🔒 코드는 비공개</span>
+            <span class="chip">🌐 로직은 공공재</span>
             <span class="chip">🤖 Hermes Agent</span>
-            <span class="chip">💬 Slack DM</span>
           </div>
         </div>
         <div class="mock anim">
@@ -277,36 +302,36 @@
           </div>
         </div>
       </div>
-      <div class="note">안녕하세요. 오늘은 파트너 FE 모노레포에 붙여본 'Partner FE Bot' 이야기를 가져왔습니다. 단순히 봇을 만들었다가 아니라, 어떤 문제를 풀려고 했고 Hermes라는 도구를 왜·어떻게 도입했는지에 초점을 맞춰 공유하겠습니다.</div>
+      <div class="note">안녕하세요. 오늘 주제는 한 문장입니다. "코드는 비공개로 지키고, 로직은 공공재로 푼다." 지금까지 우리 코드 안의 로직을 이해하려면 결국 코드에 접근하거나, 그 코드를 아는 사람한테 물어야 했어요. 이 봇은 그 둘을 분리합니다. 코드는 사내 자산으로 그대로 가두고, 그 안의 로직은 팀 누구나 꺼내 쓸 수 있는 공공재로 바꾼 이야기를 해보겠습니다.</div>
     </div>
   </section>
 
   <!-- 2 -->
   <section class="slide">
     <div class="wrap">
-      <span class="eyebrow anim"><span class="num">01</span> 왜 만들었나</span>
-      <h2 class="anim">“이 로직 <span class="pop">어디 있더라?</span>”</h2>
-      <p class="lead anim">모노레포라 파일을 한참 뒤지고, 같은 질문에 매번 코드를 찾아 설명해야 했습니다. 이 <span class="hl">탐색 + 설명 비용</span>을 봇으로 줄일 수 없을까에서 출발했어요.</p>
+      <span class="eyebrow anim"><span class="num">01</span> 문제</span>
+      <h2 class="anim">로직이 코드 속에 <span class="pop">갇혀</span> 있다</h2>
+      <p class="lead anim">로직을 이해하려면 코드에 접근해야 하고, 결국 <span class="hl">그 코드를 아는 한 사람</span>에게 묶입니다. 코드 접근 권한이 곧 로직 이해 권한이 되는, 지식 비대칭 구조죠.</p>
       <div class="cards c3 anim">
-        <div class="card"><div class="ic">🔁</div><div class="tag">내 작업</div><h3>코드 탐색 비용</h3><p>모노레포라 로직 하나 찾으려고 여러 파일을 열어봐야 함</p></div>
-        <div class="card alt"><div class="ic">💬</div><div class="tag">협업</div><h3>반복 질문</h3><p>기획·BE의 “이 버튼 누르면 프론트에서 어떻게 처리돼요?”</p></div>
-        <div class="card alt2"><div class="ic">🧑‍💻</div><div class="tag">온보딩</div><h3>레거시 허들</h3><p>코드에 답은 있지만 처음 보는 사람에겐 그 자체가 벽</p></div>
+        <div class="card"><div class="ic">🔁</div><div class="tag">내 작업</div><h3>매번 직접 푼다</h3><p>모노레포 어딘가의 로직을, 파일을 열어가며 그때그때 다시 해독</p></div>
+        <div class="card alt"><div class="ic">💬</div><div class="tag">협업</div><h3>물어야만 풀린다</h3><p>기획·BE는 코드 접근·맥락이 없어 매번 “이거 프론트에서 어떻게 돼요?”</p></div>
+        <div class="card alt2"><div class="ic">🧑‍💻</div><div class="tag">온보딩</div><h3>한 사람이 병목</h3><p>그 코드를 아는 사람이 곧 단일 창구 = 지식이 흐르지 않음</p></div>
       </div>
-      <div class="note">출발점은 일상적 불편함이었어요. 모노레포라 '이 로직 어디 있지?' 하고 한참 뒤지고, 기획·백엔드의 반복 질문에 매번 코드를 찾아 설명하고, 신규 입사자 온보딩 때도 똑같았습니다. 이 탐색·설명 비용을 코드를 실제로 읽어 답하는 봇으로 줄이자는 게 시작이었습니다.</div>
+      <div class="note">출발점은 구조적인 문제였어요. 우리 코드 속 로직은 '코드에 접근할 수 있는 사람'만 이해할 수 있었습니다. 그래서 저는 매번 직접 찾아 해독하고, 기획·백엔드는 접근도 맥락도 없으니 사람한테 물어야만 했고, 신규 입사자한테는 그 코드를 아는 한 사람이 곧 병목이었죠. 코드 접근 권한이 로직 이해 권한과 묶여 있는 지식 비대칭, 이걸 풀고 싶었습니다.</div>
     </div>
   </section>
 
   <!-- 3 -->
   <section class="slide">
     <div class="wrap">
-      <span class="eyebrow anim"><span class="num">02</span> 한 줄 요약</span>
-      <p class="statement anim">Slack DM으로 질문하면,<br><span class="mint">실제 소스를 읽고</span> 답하는 봇</p>
+      <span class="eyebrow anim"><span class="num">02</span> 핵심 아이디어</span>
+      <p class="statement anim">코드 접근과 로직 이해를<br><span class="mint">분리</span>한다</p>
       <div class="badges anim">
-        <div class="badge"><span class="ic">📂</span>벡터DB 없이 파일 직접 탐색</div>
-        <div class="badge"><span class="ic">🆕</span>항상 최신 코드 기준</div>
-        <div class="badge"><span class="ic">🔒</span>읽기 전용 · 수정 불가</div>
+        <div class="badge"><span class="ic">🔒</span>코드는 비공개로 가둔다</div>
+        <div class="badge"><span class="ic">🌐</span>로직은 공공재로 푼다</div>
+        <div class="badge"><span class="ic">🤖</span>그 사이를 봇이 잇는다</div>
       </div>
-      <div class="note">한 줄로, 슬랙에서 DM 보내면 모노레포 코드를 직접 읽고 답하는 봇입니다. 미리 임베딩한 벡터DB가 아니라 질문이 올 때마다 실제 파일을 읽어서 항상 최신 기준으로 답하고, 코드는 읽기 전용으로만 접근합니다.</div>
+      <div class="note">해법의 핵심은 분리입니다. 지금까지 코드 접근과 로직 이해가 한 덩어리로 묶여 있었다면, 이걸 떼어냅니다. 코드 자체는 보안 경계 안에 비공개로 가두고요. 그 안의 로직, 즉 '어떻게 동작하는가'라는 이해는 누구나 꺼내 쓰는 공공재로 풉니다. 그리고 그 둘 사이에서 코드를 안전하게 읽어 이해만 내보내는 번역기 역할을 봇이 합니다.</div>
     </div>
   </section>
 
@@ -314,18 +339,18 @@
   <section class="slide">
     <div class="wrap">
       <span class="eyebrow anim"><span class="num">03</span> 전체 그림</span>
-      <h2 class="anim">단순한 파이프라인, 뼈대는 <span class="mint">Hermes</span></h2>
+      <h2 class="anim">분리를 수행하는 장치, <span class="mint">Hermes</span></h2>
       <div class="pipe anim">
-        <div class="node"><div class="k">Input</div><div class="v">Slack DM</div><small>사용자 질문</small></div>
+        <div class="node"><div class="k">공개 질문</div><div class="v">Slack DM</div><small>누구나 질문</small></div>
         <div class="arrow">→</div>
-        <div class="node star"><div class="k">Agent ★</div><div class="v">Hermes Agent</div><small>전체를 묶는 뼈대</small></div>
+        <div class="node star"><div class="k">경계 ★</div><div class="v">Hermes Agent</div><small>읽기·번역의 관문</small></div>
         <div class="arrow">→</div>
         <div class="node"><div class="k">Model</div><div class="v">AI API</div><small>현재 OpenAI Codex</small></div>
         <div class="arrow">→</div>
-        <div class="node"><div class="k">Source</div><div class="v">모노레포</div><small>find · grep · read</small></div>
+        <div class="node"><div class="k">비공개 코드</div><div class="v">모노레포</div><small>read-only · 경계 안</small></div>
       </div>
-      <p class="lead anim">메시지 수신·모델 연결·코드 읽기 도구까지를 인프라를 직접 짜지 않고 <strong class="mint">Hermes Agent 하나로</strong> 묶었습니다.</p>
-      <div class="note">구조는 단순합니다. 슬랙 DM이 들어오면 Hermes가 받고, 뒤에 붙은 모델 API를 호출하고, 그 모델이 find·grep·read_file로 실제 소스를 읽어 답을 만듭니다. 핵심은 이 전체를 제가 인프라를 직접 짜지 않고 Hermes 하나로 묶었다는 점이에요. 그래서 이제 Hermes를 깊게 보겠습니다.</div>
+      <p class="lead anim">비공개 코드는 <strong class="mint">경계 안에서만 읽고</strong>, 밖으로 나가는 건 코드가 아니라 <strong class="pop">이해(로직)</strong>뿐. 그 경계를 Hermes가 만듭니다.</p>
+      <div class="note">구조로 보면 이렇습니다. 누구나 슬랙으로 질문을 던지면, Hermes가 관문 역할을 하면서 경계 안에서만 코드를 읽습니다. 모노레포는 read-only로 경계 안에 머물고, 밖으로 나가는 건 코드 원문이 아니라 '이렇게 동작한다'는 이해뿐이에요. 즉 Hermes가 비공개와 공공화를 가르는 경계선 그 자체입니다. 이제 이 장치를 깊게 보겠습니다.</div>
     </div>
   </section>
 
@@ -361,15 +386,15 @@
   <!-- 7 -->
   <section class="slide">
     <div class="wrap">
-      <span class="eyebrow hermes anim"><span class="num">HERMES</span> 심화 ③ — 학습</span>
-      <h2 class="anim">쓸수록 똑똑해진다 <span class="pop">: 상태를 잃지 않음</span></h2>
+      <span class="eyebrow hermes anim"><span class="num">HERMES</span> 심화 ③ — 축적</span>
+      <h2 class="anim">한 번 푼 로직은 <span class="pop">공공 자산으로 쌓인다</span></h2>
       <div class="cards c3 anim">
-        <div class="card"><div class="ic">📘</div><div class="tag">절차적 기억</div><h3>Skill</h3><p>복잡한 작업을 끝내면 절차·함정·검증을 마크다운으로 자동 생성 → 다음엔 처음부터 추론 안 함<br><span class="path">~/.hermes/skills/</span></p></div>
+        <div class="card"><div class="ic">📘</div><div class="tag">절차적 기억</div><h3>Skill</h3><p>복잡한 질문을 한 번 풀면 절차·함정·검증을 마크다운으로 자동 정리 → 다음엔 그 로직을 재사용<br><span class="path">~/.hermes/skills/</span></p></div>
         <div class="card alt"><div class="ic">🗒</div><div class="tag">사실/성향</div><h3>MEMORY·USER.md</h3><p>알게 된 사실·사용자 성향을 사람이 읽는 마크다운으로 누적</p></div>
         <div class="card alt2"><div class="ic">🎭</div><div class="tag">규칙</div><h3>SOUL.md</h3><p>봇 페르소나·규칙을 코드 아닌 <strong>자연어</strong>로 정의 → 비개발자도 수정 가능</p></div>
       </div>
-      <p class="lead anim">모델을 재학습하는 게 아니라 <strong class="mint">컨텍스트에 노하우를 끼워 넣는</strong> 방식 → 추가 비용 없이 반복이 빨라지고 정확해짐.</p>
-      <div class="note">가장 Hermes다운 부분입니다. 보통 에이전트는 대화가 끝나면 다 잊는데, Hermes는 세 층으로 기억해요. skill은 복잡한 작업의 노하우를 마크다운으로 정리해 ~/.hermes/skills/ 에 쌓아두고 다음에 불러씁니다. MEMORY·USER.md에 사실과 성향이 누적되고, SOUL.md엔 규칙을 자연어로 적어요. '기획·BE도 이해하게 설명하라' 같은 규칙이 전부 여기 들어갑니다. 모델 재학습이 아니라 컨텍스트에 노하우를 끼워 넣는 방식이라 추가 비용 없이 좋아집니다.</div>
+      <p class="lead anim">개인 머릿속에 흩어지던 노하우가 <strong class="mint">읽을 수 있는 문서로 축적</strong> → 풀린 로직이 사라지지 않고 팀의 공유 자산이 됨.</p>
+      <div class="note">분리만 하는 게 아니라, 한 번 푼 로직이 사라지지 않는다는 게 핵심입니다. Hermes는 복잡한 질문을 풀고 나면 그 절차와 함정을 skill 문서로 ~/.hermes/skills/ 에 정리해두고 다음에 재사용해요. 예전엔 누군가의 머릿속에만 있던 노하우가, 이제 누구나 읽을 수 있는 마크다운으로 쌓이는 겁니다. 풀린 로직이 공공 자산으로 축적되는 거죠. SOUL.md엔 '기획·BE도 이해하게 설명하라' 같은 규칙을 자연어로 적어둬서 비개발자도 손볼 수 있고요.</div>
     </div>
   </section>
 
@@ -391,15 +416,15 @@
   <!-- 9 -->
   <section class="slide">
     <div class="wrap">
-      <span class="eyebrow hermes anim"><span class="num">HERMES</span> 심화 ⑤ — 보안</span>
-      <h2 class="anim">안전하게 코드에 붙이기</h2>
+      <span class="eyebrow hermes anim"><span class="num">HERMES</span> 심화 ⑤ — 🔒 비공개 경계</span>
+      <h2 class="anim">코드는 <span class="mint">비공개</span>로 지킨다</h2>
       <ul class="blist anim">
         <li><span class="ic">🐳</span><span><b>Docker 컨테이너 실행</b> — 맥북에서 컨테이너로 구동해 호스트와 분리</span></li>
-        <li><span class="ic">📁</span><span><b>모노레포 읽기 전용 마운트</b>(<span class="mono">:ro</span>) — <strong>코드 수정이 구조적으로 불가능</strong></span></li>
+        <li><span class="ic">📁</span><span><b>모노레포 읽기 전용 마운트</b>(<span class="mono">:ro</span>) — <strong>코드 수정·반출이 구조적으로 불가능</strong></span></li>
         <li><span class="ic">🧱</span><span><b>Hermes 기본 안전장치</b> — 위험 명령 승인(command approval) · 권한 드롭 · LLM에 비밀키 노출 차단(credential stripping) · 세션 격리</span></li>
       </ul>
-      <p class="lead anim">‘편리한 장난감’과 ‘실제 시스템에 붙일 수 있는 에이전트’의 차이는 <strong class="mint">이 격리</strong>에서 갈립니다.</p>
-      <div class="note">코드를 읽는 에이전트는 편리한 만큼 위험할 수 있어 경계를 분명히 했어요. 맥북에서 Docker로 돌리고, 모노레포를 읽기 전용으로 마운트해서 봇이 코드를 고치는 건 구조적으로 불가능합니다. Hermes 자체도 위험 명령 승인, 권한 드롭, 비밀키 차단, 세션 격리가 기본이라 사내 코드에 붙일 때 신뢰 기준선이 됩니다.</div>
+      <p class="lead anim">코드는 경계를 넘지 못합니다. 밖으로 나가는 건 코드가 아니라 <strong class="mint">‘이해’</strong>뿐 — 이게 ‘공공화’가 ‘유출’이 되지 않게 하는 선입니다.</p>
+      <div class="note">공공화의 전제는 비공개가 확실히 지켜진다는 거예요. 그래서 경계를 분명히 했습니다. 맥북에서 Docker로 돌리고, 모노레포를 읽기 전용으로 마운트해서 코드 수정도 반출도 구조적으로 불가능합니다. Hermes 자체도 위험 명령 승인, 권한 드롭, 비밀키 차단, 세션 격리가 기본이고요. 즉 코드는 경계를 못 넘고, 밖으로 나가는 건 '이해'뿐입니다. 이 선이 있어야 로직을 푸는 게 코드를 푸는 게 아니게 됩니다.</div>
     </div>
   </section>
 
@@ -447,9 +472,9 @@
   <!-- 12 -->
   <section class="slide">
     <div class="wrap">
-      <span class="eyebrow anim"><span class="num">05</span> 어떻게 쓰나</span>
-      <h2 class="anim">Slack에서 <span class="mint">DM</span> 한 통</h2>
-      <p class="lead anim">질문할 때 <span class="hl">어떤 앱인지 지정</span>하면 탐색 범위가 좁아져 더 빠릅니다.</p>
+      <span class="eyebrow anim"><span class="num">05</span> 🌐 로직을 푸는 입구</span>
+      <h2 class="anim">권한·맥락 없이도 <span class="mint">누구나</span></h2>
+      <p class="lead anim">코드 접근 권한이 없어도 기획·BE·신규입사자까지 Slack <span class="hl">DM 한 통</span>이면 로직을 꺼내 씁니다. 앱을 지정하면 더 정확해요.</p>
       <div class="tbl anim">
         <table>
           <tr><th>이렇게 부르면</th><th>여기를 탐색</th></tr>
@@ -461,15 +486,15 @@
         <div class="card"><p>💬 “<b>병원관리자</b>에서 로그인 플로우 어떻게 돼?”</p></div>
         <div class="card alt"><p>💬 “<b>운영관리자</b> 토스트 어디서 관리해?”</p></div>
       </div>
-      <div class="note">쓰는 법은 간단해요. 'Partner FE Bot'한테 DM만 보내면 됩니다. 팁은 어떤 앱인지 지정하면 범위가 좁아져 빨라진다는 것. '병원관리자'는 client front, '운영관리자'는 admin front를 봅니다.</div>
+      <div class="note">공공화의 실제 입구는 이렇게 단순합니다. 코드 접근 권한이 없는 기획·백엔드·신규입사자도 'Partner FE Bot'한테 DM만 보내면 로직을 꺼내 쓸 수 있어요. 더 이상 아는 한 사람을 찾아 헤맬 필요가 없는 거죠. 팁은 어떤 앱인지 지정하면 범위가 좁아져 정확해진다는 것. '병원관리자'는 client front, '운영관리자'는 admin front를 봅니다.</div>
     </div>
   </section>
 
   <!-- 13 -->
   <section class="slide">
     <div class="wrap">
-      <span class="eyebrow anim"><span class="num">06</span> 답변 형식</span>
-      <h2 class="anim">신뢰할 수 있는 출력</h2>
+      <span class="eyebrow anim"><span class="num">06</span> 🌐 공공재가 된 로직</span>
+      <h2 class="anim">공개해도 되는, <span class="mint">검증된 로직</span></h2>
       <div class="split anim" style="grid-template-columns:1fr 1fr;align-items:start">
         <div class="fmt">
 <span class="h">## 답변</span><br>흐름 중심의 자연어 설명<br><br>
@@ -485,14 +510,51 @@
           </ul>
         </div>
       </div>
-      <div class="note">봇은 항상 답변·근거·주의 세 단락으로 답합니다. 근거에 경로와 라인 번호가 찍혀 바로 코드로 갈 수 있고, FE 용어는 풀어 쓰고, 프론트가 처리 안 하는 로직은 백엔드라고 명시해 경계를 그어요. 이 규칙들이 전부 아까 본 SOUL.md에 적혀 있습니다.</div>
+      <div class="note">로직을 공공재로 풀려면, 그 출력이 믿을 수 있고 검증 가능해야 합니다. 그래서 답은 항상 답변·근거·주의 세 단락이에요. 근거에 파일 경로와 라인 번호가 찍히니 누구든 원본으로 가서 직접 검증할 수 있고, FE 용어는 기획·BE도 이해하게 풀어 쓰고, 프론트 밖 로직은 '백엔드에 있을 것 같다'고 경계를 그어 잘못된 확신을 막습니다. 이 규칙들이 전부 SOUL.md에 적혀 있어서, 공개되는 로직의 품질을 자연어 한 파일로 관리하는 셈입니다.</div>
     </div>
   </section>
 
-  <!-- 14 -->
+  <!-- 14 metrics -->
   <section class="slide">
     <div class="wrap">
-      <span class="eyebrow anim"><span class="num">07</span> 한계와 로드맵</span>
+      <span class="eyebrow anim"><span class="num">07</span> 운영 가시성</span>
+      <div class="hero-grid" style="margin-top:6px;align-items:start">
+        <div>
+          <h2 class="anim">잘 돌고 있나,<br><span class="mint">매주 자동으로</span></h2>
+          <p class="lead anim">Gateway의 <strong class="mint">cron 스케줄</strong>로 주간 메트릭을 집계해 슬랙으로 푸시합니다. 수신량·응답률·응답시간·에러를 한 장으로.</p>
+          <ul class="blist anim" style="margin-top:22px">
+            <li><span class="ic">⏰</span><span>매주 월요일 자동 발송 — <strong>cron 한 줄</strong></span></li>
+            <li><span class="ic">✅</span><span>응답 완료율 · 평균/최대 응답시간 추적</span></li>
+            <li><span class="ic">📈</span><span>가장 바빴던 날 · 에러 추이로 부하 파악</span></li>
+          </ul>
+        </div>
+        <div class="report anim">
+          <div class="report-h"><span class="em">📊</span> Hermes 주간 리포트 <small>06/18~06/25</small></div>
+          <div class="report-grid">
+            <div class="metric"><div class="ml">총 수신 메시지</div><div class="mv">33건</div></div>
+            <div class="metric"><div class="ml">응답 완료</div><div class="mv">33건 <span class="pct">(100%)</span></div></div>
+            <div class="metric"><div class="ml">평균 응답 시간</div><div class="mv">1.1분</div></div>
+            <div class="metric"><div class="ml">최대 응답 시간</div><div class="mv">3.7분</div></div>
+            <div class="metric"><div class="ml">가장 바빴던 날</div><div class="mv">06-25 · 27건</div></div>
+            <div class="metric"><div class="ml">에러 / 경고</div><div class="mv"><span class="led"></span> 196건</div></div>
+          </div>
+          <div class="report-days">
+            <div class="lbl">날짜별 수신 현황</div>
+            <div class="dayrow"><span class="dt">06-23</span><span class="bar"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span> 4건</div>
+            <div class="dayrow"><span class="dt">06-24</span><span class="bar"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span> 2건</div>
+            <div class="dayrow"><span class="dt">06-25</span><span class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span> 27건</div>
+          </div>
+          <div class="report-f">🤖 Hermes Gateway · 자동 리포트 · 2026-06-25 18:34</div>
+        </div>
+      </div>
+      <div class="note">봇이 잘 돌고 있는지 감으로 알 순 없으니, Gateway의 cron 스케줄로 매주 월요일 주간 메트릭을 자동 집계해 슬랙으로 받습니다. 수신량, 응답 완료율, 평균·최대 응답시간, 가장 바빴던 날, 에러까지 한 장으로 보여요. 참고로 에러·경고가 196건인데 응답 완료율은 100%인데요, 대부분 rate limit 같은 비치명적 경고가 재시도로 흡수된 거라 실제 실패는 없었습니다. 이런 지표 자체도 운영하면서 계속 다듬고 있어요.</div>
+    </div>
+  </section>
+
+  <!-- 15 -->
+  <section class="slide">
+    <div class="wrap">
+      <span class="eyebrow anim"><span class="num">08</span> 한계와 로드맵</span>
       <h2 class="anim">솔직한 현재, 그리고 다음</h2>
       <div class="split anim">
         <div class="panel warm"><h3>🚧 지금의 한계</h3><ul>
@@ -514,10 +576,10 @@
   <section class="slide">
     <div class="wrap close">
       <span class="eyebrow anim" style="justify-content:center"><span class="num">FIN</span> 마무리</span>
-      <h1 class="anim" style="font-size:clamp(30px,5vw,58px)">작게 시작해서<br><span class="mint">빠르게 검증</span>한 사례</h1>
-      <p class="lead anim" style="margin-left:auto;margin-right:auto;text-align:center">반복되던 탐색·설명 비용을 봇으로 흡수 · Hermes로 인프라 없이 <strong class="mint">설정 조립</strong> · 모델은 <strong class="pop">갈아끼우며 실험</strong>. 같은 패턴을 팀 내 다른 반복 업무로도 확장할 수 있습니다.</p>
+      <h1 class="anim" style="font-size:clamp(30px,5vw,58px)">코드는 자산으로 지키고,<br><span class="mint">이해는 공공재로</span></h1>
+      <p class="lead anim" style="margin-left:auto;margin-right:auto;text-align:center">코드 접근과 로직 이해를 <strong class="mint">분리</strong>했더니, 코드는 경계 안에 안전하게 남고 로직은 팀 누구나 꺼내 쓰는 자산이 됐습니다. ‘아는 한 사람’에 묶였던 지식이 흐르기 시작한 거죠. 같은 패턴은 다른 비공개 자산에도 확장할 수 있습니다.</p>
       <div class="anim"><span class="cta">많이 써보고 피드백 주세요 🙂</span></div>
-      <div class="note">마무리합니다. 거창한 플랫폼이 아니라 작게 시작해 빠르게 검증한 사례에 가깝습니다. 탐색·설명 비용을 봇으로 흡수했고, Hermes 덕에 인프라 없이 설정으로 조립하며 모델을 자유롭게 실험했어요. 같은 패턴을 다른 반복 업무에도 적용할 수 있습니다. 많이 써보시고 피드백 주세요. 도입 관심 있으면 따로 같이 봐요. 감사합니다!</div>
+      <div class="note">정리하면, 코드 접근과 로직 이해를 분리한 게 핵심이었습니다. 코드는 비공개 경계 안에 자산으로 그대로 남고, 그 안의 로직은 팀 누구나 꺼내 쓰는 공공재가 됐어요. '아는 한 사람'에게 묶여 있던 지식이 흐르기 시작한 겁니다. 이 분리 패턴은 다른 비공개 자산, 다른 반복 업무에도 확장할 수 있다고 봐요. 많이 써보시고 피드백 주세요. 도입 관심 있으면 따로 같이 봅시다. 감사합니다!</div>
     </div>
   </section>
 
